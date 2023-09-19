@@ -1,0 +1,69 @@
+#include <SoftWire.h>
+
+#define PIN5 5 
+#define PIN8 8 
+#define PIN9 9
+#define PIN10 10
+volatile int flowCounter1 = 0; //variable for storing the pulse count for the first sensor
+volatile int flowCounter2 = 0; //variable for storing the pulse count for the second sensor
+int flowPin1 = 2; //interrupt pin for reading the first sensor
+int flowPin2 = 3; //interrupt pin for reading the second sensor
+byte checkFloat = 0b000; // Value to send
+uint16_t checkFloat2 = 0; // Value to send
+byte dataF = 0;
+
+void flowISR1() {
+  flowCounter1++; //increment the counter for the first sensor
+}
+
+void flowISR2() {
+  flowCounter2++; //increment the counter for the second sensor
+}
+
+float flowRate(int pulse){
+ float flow;
+  //Start the math
+ flow = (pulse * 2.25); //Take counted pulses in the last second and
+ //multiply by 2.25mL 
+ 
+ flow = flow * 60; //Convert seconds to minutes, giving you mL / Minute
+ flow = flow / 1000; //Convert mL to Liters, giving you Liters / Minute
+
+ return flow;
+}
+
+void setup() {
+  pinMode(PIN8, OUTPUT);
+  pinMode(PIN9, OUTPUT);
+  pinMode(PIN10, OUTPUT);
+  digitalWrite(PIN8, LOW);
+  digitalWrite(PIN8, LOW);
+  digitalWrite(PIN10, HIGH);
+}
+
+void loop() {
+  flowCounter1 = 0; // Reset the counter so we start counting from 0 again
+  flowCounter2 = 0; // Reset the counter so we start counting from 0 again
+  interrupts(); //Enables interrupts on the Arduino
+  delay (1000); //Wait 1 second 
+  noInterrupts(); //Disable the interrupts on the Arduino
+  
+  LedSignal();
+}
+
+void LedSignal() { 
+  delay(1000*60); //delay 1 min
+  if (flowRate(flowCounter1) < 1.5) digitalWrite(PIN8, HIGH);
+  else digitalWrite(PIN8, LOW);
+
+  if (flowRate(flowCounter2) <1.5) digitalWrite(PIN9, HIGH);
+  else digitalWrite(PIN9, LOW);
+
+  if (digitalRead(PIN5)) {   // read the input on digital pin 2
+    digitalWrite(PIN10, HIGH);  //when pump is running
+  }
+  else {
+    digitalWrite(PIN10, LOW); //when pump is NOT running
+  }
+    
+}
